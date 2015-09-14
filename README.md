@@ -26,7 +26,8 @@ common
     models/              contains model classes used in both backend and frontend
 console
     config/              contains console configurations
-    controllers/         contains console controllers (commands)
+    controllers/
+    controllers/ RbacController        เพิ่มการทำ Rbac db
     migrations/          contains database migrations
     models/              contains console-specific model classes
     runtime/             contains files generated during runtime
