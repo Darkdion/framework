@@ -6,7 +6,7 @@ use yii\base\NotSupportedException;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
-
+use yii\helpers\ArrayHelper;
 /**
  * User model
  *
@@ -51,12 +51,76 @@ class User extends ActiveRecord implements IdentityInterface
     /**
      * @inheritdoc
      */
+
+    public  function  getItemStatus(){
+        return[
+           self::STATUS_ACTIVE=>'Active',
+            self::STATUS_DELETED=>'Deleted'
+        ];
+    }
+
+
+    public function getStatusName(){
+        $items =$this->getItemStatus();
+        return array_key_exists($this->status,$items) ? $items[$this->status]:'';
+    }
     public function rules()
     {
         return [
             ['status', 'default', 'value' => self::STATUS_ACTIVE],
             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+
+            ['username', 'filter', 'filter' => 'trim'],
+            ['username', 'required'],
+            ['username', 'unique', 'targetClass' => '\common\models\User', 'message' => 'ชื่อผู้ใช้มีอยู่ในระบบแล้ว !...'],
+            ['username', 'string', 'min' => 2, 'max' => 255],
+
+            ['email', 'filter', 'filter' => 'trim'],
+            ['email', 'required'],
+            ['email', 'email'],
+            ['email', 'unique', 'targetClass' => '\common\models\User', 'message' => 'มีผู้ใช้งานอีเมล์นี้แล้ว !....'],
+
+            ['password', 'required'],
+            ['password', 'string', 'min' => 6],
+
+            ['confirm_password', 'required'],
+            ['confirm_password', 'string', 'min' => 6],
+            ['confirm_password', 'compare','compareAttribute'=>'password'],
+
+            ['roles', 'safe']
+
         ];
+    }
+
+
+    public function getAllRoles(){
+        $auth = $auth = Yii::$app->authManager;
+        return ArrayHelper::map($auth->getRoles(),'name','name');
+    }
+
+    public function getRoleByUser(){
+        $auth = Yii::$app->authManager;
+        $rolesUser = $auth->getRolesByUser($this->id);
+        $roleItems = $this->getAllRoles();
+        $roleSelect=[];
+
+        foreach ($roleItems as $key => $roleName) {
+            foreach ($rolesUser as $role) {
+                if($key==$role->name){
+                    $roleSelect[$key]=$roleName;
+                }
+            }
+        }
+        $this->roles = $roleSelect;
+    }
+
+    public function assignment(){
+        $auth = Yii::$app->authManager;
+        $roleUser = $auth->getRolesByUser($this->id);
+        $auth->revokeAll($this->id);
+        foreach ($this->roles as $key => $roleName) {
+            $auth->assign($auth->getRole($roleName),$this->id);
+        }
     }
 public function scenarios()
 {

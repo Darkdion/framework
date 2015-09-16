@@ -20,7 +20,12 @@ class RbacController extends Controller{
         $updatePost->description='Update application';
         $auth->add($updatePost);
 
+//เพิ่มการเข้าใช้งาน ส่วน Backend<---------------------
+        $loginToBackend = $auth->createPermission('loginToBackend');
+        $loginToBackend->description = 'ล็อกอินเข้าใช้งานส่วน backend';
+        $auth->add($loginToBackend);
 
+//<-------------------------------------
         $manageUser=$auth->createRole('ManageUser');
         $manageUser->description='สำหรับจัดการข้อมูลผู้ใช้งาน';
         $auth->add($manageUser);
@@ -52,6 +57,10 @@ class RbacController extends Controller{
         $auth->addChild($updateOwnPost, $updatePost);
         $auth->addChild($author, $updateOwnPost);
 
+        //กำหนดให้ ManageUser loginTobackend ได้คนเดียว <-------------
+        $auth->addChild($manageUser, $loginToBackend);
+
+        //<-------------------------------------------->>
         $auth->addChild($management, $manageUser);
         $auth->addChild($management, $author);
         $auth->addChild($admin, $management);

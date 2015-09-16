@@ -12,6 +12,10 @@ use yii\filters\AccessControl;
 
 use yii\web\ForbiddenHttpException;
 
+use yii\helpers\Html;
+use kartik\growl\Growl;
+
+
 /**
  * BlogController implements the CRUD actions for Blog model.
  */
@@ -101,9 +105,28 @@ class BlogController extends Controller
         $model = new Blog();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            Yii::$app->getSession()->setFlash('alert', [
+                'type' => Growl::TYPE_SUCCESS,
+                'duration' => 1200,
+                'icon' => 'fa fa-floppy-o fa-2x',
+                'title' => Yii::t('app', Html::encode('สร้างบทความ')),
+                'message' => Yii::t('app',Html::encode('บันทึกข้อมูลเสร็จเรียบร้อย')),
+                'showSeparator' => true,
+                'delay' => 0,
+                'pluginOptions' => [
+                    'showProgressbar' => true,
+                    'placement' => [
+                        'from' => 'top',
+                        'align' => 'right',
+                    ]
+                ]
+            ]);
             return $this->redirect(['view', 'id' => $model->id]);
+
+
         } else {
-            return $this->render('create', [
+
+            return $this->renderAjax('create', [
                 'model' => $model,
             ]);
         }
@@ -134,8 +157,25 @@ class BlogController extends Controller
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            Yii::$app->getSession()->setFlash('alert', [
+                'type' => Growl::TYPE_WARNING,
+                'duration' => 1200,
+                'icon' => 'fa fa-pencil-square-o',
+                'title' => Yii::t('app', Html::encode('อัพเดต ')),
+                'message' => Yii::t('app',Html::encode('บันทึกข้อมูลการแก้ไขเสร็จเรียบร้อย')),
+                'showSeparator' => true,
+                'delay' => 0,
+                'pluginOptions' => [
+                    'showProgressbar' => true,
+                    'placement' => [
+                        'from' => 'top',
+                        'align' => 'right',
+                    ]
+                ]
+            ]);
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
+
             return $this->render('update', [
                 'model' => $model,
             ]);
@@ -150,9 +190,28 @@ class BlogController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        if($this->findModel($id)->delete()){
+            Yii::$app->getSession()->setFlash('alert', [
+                'type' => Growl::TYPE_DANGER,
+                'duration' => 500,
+                'icon' => 'fa fa-trash-o fa-2x',
+                'title' => Yii::t('app', Html::encode('ลบ')),
+                'message' => Yii::t('app',Html::encode('ลบข้อมูลเสร็จเรียบร้อย')),
+                'showSeparator' => true,
+                'delay' => 0,
+                'pluginOptions' => [
+                    'showProgressbar' => true,
+                    'placement' => [
+                        'from' => 'top',
+                        'align' => 'right',
+                    ]
+                ]
+            ]);
 
-        return $this->redirect(['index']);
+            return $this->redirect(['index']);
+        }
+
+
     }
 
     /**

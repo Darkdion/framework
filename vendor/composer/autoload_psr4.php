@@ -14,6 +14,10 @@ return array(
     'yii\\codeception\\' => array($vendorDir . '/yiisoft/yii2-codeception'),
     'yii\\bootstrap\\' => array($vendorDir . '/yiisoft/yii2-bootstrap'),
     'yii\\' => array($vendorDir . '/yiisoft/yii2'),
+    'prawee\\widgets\\' => array($vendorDir . '/prawee/yii2-widgets'),
+    'kartik\\growl\\' => array($vendorDir . '/kartik-v/yii2-widget-growl'),
+    'kartik\\base\\' => array($vendorDir . '/kartik-v/yii2-krajee-base'),
+    'dixonsatit\\thaiYearFormatter\\' => array($vendorDir . '/dixonsatit/yii2-thai-year-formatter'),
     'cebe\\markdown\\' => array($vendorDir . '/cebe/markdown'),
     'Faker\\' => array($vendorDir . '/fzaninotto/faker/src/Faker'),
 );

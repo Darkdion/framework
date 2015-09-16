@@ -13,6 +13,8 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 
+use kartik\growl\Growl;
+use yii\helpers\Html;
 /**
  * Site controller
  */
@@ -83,13 +85,46 @@ class SiteController extends Controller
     public function actionLogin()
     {
         if (!\Yii::$app->user->isGuest) {
+
             return $this->goHome();
         }
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            Yii::$app->getSession()->setFlash('alert', [
+                'type' => Growl::TYPE_GROWL,
+                'duration' => 1200,
+                'icon' => 'fa fa-sign-in fa-2x',
+                //'title' => Yii::t('app', Html::encode('ยินต้อนรับ')),
+                'message' => Yii::t('app',Html::encode('เข้าสู่ระบบเรียบร้อย !')),
+                'showSeparator' => true,
+                'delay' => 1,
+                'pluginOptions' => [
+                    'showProgressbar' => true,
+                    'placement' => [
+                        'from' => 'top',
+                        'align' => 'right',
+                    ]
+                ]
+            ]);
             return $this->goBack();
         } else {
+            Yii::$app->getSession()->setFlash('alert', [
+                'type' => Growl::TYPE_DANGER,
+                'duration' => 1200,
+                'icon' => 'fa fa-sign-in fa-2x',
+                //'title' => Yii::t('app', Html::encode('ยินต้อนรับ')),
+                'message' => Yii::t('app',Html::encode('ผิดพลาด !')),
+                'showSeparator' => true,
+                'delay' => 1,
+                'pluginOptions' => [
+                    'showProgressbar' => true,
+                    'placement' => [
+                        'from' => 'top',
+                        'align' => 'right',
+                    ]
+                ]
+            ]);
             return $this->render('login', [
                 'model' => $model,
             ]);
@@ -103,9 +138,27 @@ class SiteController extends Controller
      */
     public function actionLogout()
     {
-        Yii::$app->user->logout();
+        if(Yii::$app->user->logout()){
+            Yii::$app->getSession()->setFlash('alert', [
+                'type' => Growl::TYPE_GROWL,
+                'duration' => 500,
+                'icon' => 'fa fa-sign-out fa-2x',
+               // 'title' => Yii::t('app', Html::encode('')),
+                'message' => Yii::t('app',Html::encode('ออกจากระบบเรียบร้อย')),
+                'showSeparator' => true,
+                'delay' => 0,
+                'pluginOptions' => [
+                    //'showProgressbar' => true,
+                    'placement' => [
+                        'from' => 'top',
+                        'align' => 'right',
+                    ]
+                ]
+            ]);
+            return $this->goHome();
+        }
 
-        return $this->goHome();
+
     }
 
     /**
