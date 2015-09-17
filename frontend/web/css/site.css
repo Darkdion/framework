@@ -1,7 +1,23 @@
+@font-face {
+    font-family: 'ThaiSansNeue';
+    src:url('../fonts/thaisanslite_r1.otf');
+    src:url('../fonts/thaisanslite_r1.ttf') ;
+    /*url('/path/th_mali_grade6-webfont.woff') format('woff'),*/
+    /*url('/path/th_mali_grade6-webfont.ttf') format('truetype'),*/
+    /*url('/path/th_mali_grade6-webfont.svg#webfontCXAunSZT')*/
+    /*format('svg');*/
+    font-weight: normal;
+    font-style: normal;
+}
+
 html,
 body {
-    height: 100%;
+    /*font-family:  "ThaiSansNeue", "Helvetica Neue", Helvetica, Arial, sans-serifHelvetica, Arial, sans-serif;*/
+    /*font-size: 20px;*/
+
+height: 100%;
 }
+
 
 .wrap {
     min-height: 100%;

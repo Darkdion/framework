@@ -35,21 +35,24 @@ AppAsset::register($this);
         ],
     ]);
     $menuItems = [
-        ['label' => 'Home', 'url' => ['/site/index']],
-        ['label' => 'About', 'url' => ['/site/about']],
-        ['label' => 'Contact', 'url' => ['/site/contact']],
+        ['label' => 'หน้าหลัก', 'url' => ['/site/index']],
+        ['label' => 'เกี่ยวกับ', 'url' => ['/site/about']],
+        ['label' => 'ติดต่อ', 'url' => ['/site/contact']],
     ];
     if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => 'Signup', 'url' => ['/site/signup']];
-        $menuItems[] = ['label' => 'Login', 'url' => ['/site/login']];
+        $menuItems[] = ['label' => 'สมัครสมาชิก', 'url' => ['/site/signup']];
+        $menuItems[] = ['label' => 'เข้าสู่ระบบ', 'url' => ['/site/login']];
     } else {
         $menuItems[] = ['label' => 'Blog', 'url' => ['/blog/index']];
         $menuItems[] =
 
             [
-            'label' => 'Logout (' . Yii::$app->user->identity->username . ')',
-            'url' => ['/site/logout'],
-            'linkOptions' => ['data-method' => 'post']
+            'label' => 'ออกจากระบบ(' . Yii::$app->user->identity->username . ')',
+                'items'=>[
+                    ['label' => 'Profile', 'url' => ['/profile/index']],
+                    ['label' => 'Update Profile', 'url' => ['/profile/update']],
+                    [ 'label'=>'ออกจากระบบ','url' => ['/site/logout'],'linkOptions' => ['data-method' => 'post']]
+                ]
         ];
     }
     echo Nav::widget([

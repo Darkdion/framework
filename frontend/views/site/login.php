@@ -14,9 +14,10 @@ $this->params['breadcrumbs'][] = $this->title;
     <h1><?= Html::encode($this->title) ?></h1>
 
     <p>Please fill out the following fields to login:</p>
-
+<div class="container">
     <div class="row">
-        <div class="col-lg-5">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
             <?php $form = ActiveForm::begin(['id' => 'login-form']); ?>
 
                 <?= $form->field($model, 'username') ?>
@@ -36,4 +37,5 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php ActiveForm::end(); ?>
         </div>
     </div>
+</div>
 </div>
