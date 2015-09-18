@@ -8,107 +8,213 @@
 namespace yii\widgets;
 
 use Yii;
+use yii\base\Arrayable;
+use yii\i18n\Formatter;
+use yii\base\InvalidConfigException;
+use yii\base\Model;
+use yii\base\Widget;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
+use yii\helpers\Inflector;
 
 /**
- * The ListView widget is used to display data from data
- * provider. Each data model is rendered using the view
- * specified.
+ * DetailView displays the detail of a single data [[model]].
+ *
+ * DetailView is best used for displaying a model in a regular format (e.g. each model attribute
+ * is displayed as a row in a table.) The model can be either an instance of [[Model]]
+ * or an associative array.
+ *
+ * DetailView uses the [[attributes]] property to determines which model attributes
+ * should be displayed and how they should be formatted.
+ *
+ * A typical usage of DetailView is as follows:
+ *
+ * ~~~
+ * echo DetailView::widget([
+ *     'model' => $model,
+ *     'attributes' => [
+ *         'title',               // title attribute (in plain text)
+ *         'description:html',    // description attribute in HTML
+ *         [                      // the owner name of the model
+ *             'label' => 'Owner',
+ *             'value' => $model->owner->name,
+ *         ],
+ *         'created_at:datetime', // creation date formatted as datetime
+ *     ],
+ * ]);
+ * ~~~
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class ListView extends BaseListView
+class ListView extends Widget
 {
     /**
-     * @var array the HTML attributes for the container of the rendering result of each data model.
-     * The "tag" element specifies the tag name of the container element and defaults to "div".
-     * If "tag" is false, it means no container element will be rendered.
-     * @see \yii\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
+     * @var array|object the data model whose details are to be displayed. This can be a [[Model]] instance,
+     * an associative array, an object that implements [[Arrayable]] interface or simply an object with defined
+     * public accessible non-static properties.
      */
-    public $itemOptions = [];
+    public $model;
     /**
-     * @var string|callable the name of the view for rendering each data item, or a callback (e.g. an anonymous function)
-     * for rendering each data item. If it specifies a view name, the following variables will
-     * be available in the view:
+     * @var array a list of attributes to be displayed in the detail view. Each array element
+     * represents the specification for displaying one particular attribute.
      *
-     * - `$model`: mixed, the data model
-     * - `$key`: mixed, the key value associated with the data item
-     * - `$index`: integer, the zero-based index of the data item in the items array returned by [[dataProvider]].
-     * - `$widget`: ListView, this widget instance
+     * An attribute can be specified as a string in the format of "attribute", "attribute:format" or "attribute:format:label",
+     * where "attribute" refers to the attribute name, and "format" represents the format of the attribute. The "format"
+     * is passed to the [[Formatter::format()]] method to format an attribute value into a displayable text.
+     * Please refer to [[Formatter]] for the supported types. Both "format" and "label" are optional.
+     * They will take default values if absent.
      *
-     * Note that the view name is resolved into the view file by the current context of the [[view]] object.
+     * An attribute can also be specified in terms of an array with the following elements:
      *
-     * If this property is specified as a callback, it should have the following signature:
+     * - attribute: the attribute name. This is required if either "label" or "value" is not specified.
+     * - label: the label associated with the attribute. If this is not specified, it will be generated from the attribute name.
+     * - value: the value to be displayed. If this is not specified, it will be retrieved from [[model]] using the attribute name
+     *   by calling [[ArrayHelper::getValue()]]. Note that this value will be formatted into a displayable text
+     *   according to the "format" option.
+     * - format: the type of the value that determines how the value would be formatted into a displayable text.
+     *   Please refer to [[Formatter]] for supported types.
+     * - visible: whether the attribute is visible. If set to `false`, the attribute will NOT be displayed.
+     */
+    public $attributes;
+    /**
+     * @var string|callable the template used to render a single attribute. If a string, the token `{label}`
+     * and `{value}` will be replaced with the label and the value of the corresponding attribute.
+     * If a callback (e.g. an anonymous function), the signature must be as follows:
      *
      * ~~~
-     * function ($model, $key, $index, $widget)
+     * function ($attribute, $index, $widget)
      * ~~~
+     *
+     * where `$attribute` refer to the specification of the attribute being rendered, `$index` is the zero-based
+     * index of the attribute in the [[attributes]] array, and `$widget` refers to this widget instance.
      */
-    public $itemView;
+    public $template = "<tr><th>{label}</th><td>{value}</td></tr>";
     /**
-     * @var array additional parameters to be passed to [[itemView]] when it is being rendered.
-     * This property is used only when [[itemView]] is a string representing a view name.
-     */
-    public $viewParams = [];
-    /**
-     * @var string the HTML code to be displayed between any two consecutive items.
-     */
-    public $separator = "\n";
-    /**
-     * @var array the HTML attributes for the container tag of the list view.
-     * The "tag" element specifies the tag name of the container element and defaults to "div".
+     * @var array the HTML attributes for the container tag of this widget. The "tag" option specifies
+     * what container tag should be used. It defaults to "table" if not set.
      * @see \yii\helpers\Html::renderTagAttributes() for details on how attributes are being rendered.
      */
-    public $options = ['class' => 'list-view'];
+    public $options = ['class' => 'table table table-hover'];
+    /**
+     * @var array|Formatter the formatter used to format model attribute values into displayable texts.
+     * This can be either an instance of [[Formatter]] or an configuration array for creating the [[Formatter]]
+     * instance. If this property is not set, the "formatter" application component will be used.
+     */
+    public $formatter;
 
 
     /**
-     * Renders all data models.
-     * @return string the rendering result
+     * Initializes the detail view.
+     * This method will initialize required property values.
      */
-    public function renderItems()
+    public function init()
     {
-        $models = $this->dataProvider->getModels();
-        $keys = $this->dataProvider->getKeys();
-        $rows = [];
-        foreach (array_values($models) as $index => $model) {
-            $rows[] = $this->renderItem($model, $keys[$index], $index);
+        if ($this->model === null) {
+            throw new InvalidConfigException('Please specify the "model" property.');
         }
-
-        return implode($this->separator, $rows);
+        if ($this->formatter == null) {
+            $this->formatter = Yii::$app->getFormatter();
+        } elseif (is_array($this->formatter)) {
+            $this->formatter = Yii::createObject($this->formatter);
+        }
+        if (!$this->formatter instanceof Formatter) {
+            throw new InvalidConfigException('The "formatter" property must be either a Format object or a configuration array.');
+        }
+        $this->normalizeAttributes();
     }
 
     /**
-     * Renders a single data model.
-     * @param mixed $model the data model to be rendered
-     * @param mixed $key the key value associated with the data model
-     * @param integer $index the zero-based index of the data model in the model array returned by [[dataProvider]].
+     * Renders the detail view.
+     * This is the main entry of the whole detail view rendering.
+     */
+    public function run()
+    {
+        $rows = [];
+        $i = 0;
+        foreach ($this->attributes as $attribute) {
+            $rows[] = $this->renderAttribute($attribute, $i++);
+        }
+
+        $options = $this->options;
+        $tag = ArrayHelper::remove($options, 'tag', 'table');
+        echo Html::tag($tag, implode("\n", $rows), $options);
+    }
+
+    /**
+     * Renders a single attribute.
+     * @param array $attribute the specification of the attribute to be rendered.
+     * @param integer $index the zero-based index of the attribute in the [[attributes]] array
      * @return string the rendering result
      */
-    public function renderItem($model, $key, $index)
+    protected function renderAttribute($attribute, $index)
     {
-        if ($this->itemView === null) {
-            $content = $key;
-        } elseif (is_string($this->itemView)) {
-            $content = $this->getView()->render($this->itemView, array_merge([
-                'model' => $model,
-                'key' => $key,
-                'index' => $index,
-                'widget' => $this,
-            ], $this->viewParams));
+        if (is_string($this->template)) {
+            return strtr($this->template, [
+                '{label}' => $attribute['label'],
+                '{value}' => $this->formatter->format($attribute['value'], $attribute['format']),
+            ]);
         } else {
-            $content = call_user_func($this->itemView, $model, $key, $index, $this);
+            return call_user_func($this->template, $attribute, $index, $this);
         }
-        $options = $this->itemOptions;
-        $tag = ArrayHelper::remove($options, 'tag', 'div');
-        if ($tag !== false) {
-            $options['data-key'] = is_array($key) ? json_encode($key, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : (string) $key;
+    }
 
-            return Html::tag($tag, $content, $options);
-        } else {
-            return $content;
+    /**
+     * Normalizes the attribute specifications.
+     * @throws InvalidConfigException
+     */
+    protected function normalizeAttributes()
+    {
+        if ($this->attributes === null) {
+            if ($this->model instanceof Model) {
+                $this->attributes = $this->model->attributes();
+            } elseif (is_object($this->model)) {
+                $this->attributes = $this->model instanceof Arrayable ? $this->model->toArray() : array_keys(get_object_vars($this->model));
+            } elseif (is_array($this->model)) {
+                $this->attributes = array_keys($this->model);
+            } else {
+                throw new InvalidConfigException('The "model" property must be either an array or an object.');
+            }
+            sort($this->attributes);
+        }
+
+        foreach ($this->attributes as $i => $attribute) {
+            if (is_string($attribute)) {
+                if (!preg_match('/^([\w\.]+)(:(\w*))?(:(.*))?$/', $attribute, $matches)) {
+                    throw new InvalidConfigException('The attribute must be specified in the format of "attribute", "attribute:format" or "attribute:format:label"');
+                }
+                $attribute = [
+                    'attribute' => $matches[1],
+                    'format' => isset($matches[3]) ? $matches[3] : 'text',
+                    'label' => isset($matches[5]) ? $matches[5] : null,
+                ];
+            }
+
+            if (!is_array($attribute)) {
+                throw new InvalidConfigException('The attribute configuration must be an array.');
+            }
+
+            if (isset($attribute['visible']) && !$attribute['visible']) {
+                unset($this->attributes[$i]);
+                continue;
+            }
+
+            if (!isset($attribute['format'])) {
+                $attribute['format'] = 'text';
+            }
+            if (isset($attribute['attribute'])) {
+                $attributeName = $attribute['attribute'];
+                if (!isset($attribute['label'])) {
+                    $attribute['label'] = $this->model instanceof Model ? $this->model->getAttributeLabel($attributeName) : Inflector::camel2words($attributeName, true);
+                }
+                if (!array_key_exists('value', $attribute)) {
+                    $attribute['value'] = ArrayHelper::getValue($this->model, $attributeName);
+                }
+            } elseif (!isset($attribute['label']) || !array_key_exists('value', $attribute)) {
+                throw new InvalidConfigException('The attribute configuration requires the "attribute" element to determine the value and display label.');
+            }
+
+            $this->attributes[$i] = $attribute;
         }
     }
 }
