@@ -11,22 +11,61 @@ use yii\widgets\ActiveForm;
 <div class="user-form">
 
     <?php $form = ActiveForm::begin(); ?>
-
-    <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
+<div class="container" >
     <div class="row">
-        <div class="col-lg-6">
-            <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
+        <!-- left column -->
+        <div class="col-md-4 col-sm-6 col-xs-12">
+            <div class="text-center">
+                <img src="http://lorempixel.com/200/200/people/9/" class="avatar img-circle img-thumbnail" alt="avatar">
+                <h6>Upload a different photo...</h6>
+                <input type="file" class="text-center center-block well well-sm">
+            </div>
         </div>
-        <div class="col-lg-6">
-            <?= $form->field($model, 'confirm_password')->passwordInput(['maxlength' => true]) ?>
+        <!-- edit form column -->
+        <div class="col-md-8 col-sm-6 col-xs-12 personal-info">
+
+            <h3>ข้อมูลส่วนตัว</h3>
+            <form class="form-horizontal" role="form">
+                <div class="form-group">
+                    <label class="col-lg-3 control-label">Username:</label>
+                    <div class="col-lg-8">
+                        <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-lg-3 control-label">Email:</label>
+                    <div class="col-lg-8">
+                        <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-md-3 control-label">Password:</label>
+                    <div class="col-md-8">
+                        <?= $form->field($model, 'password')->passwordInput(['maxlength' => true]) ?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-3 control-label">Confirm password:</label>
+                    <div class="col-md-8">
+                        <?= $form->field($model, 'confirm_password')->passwordInput(['maxlength' => true]) ?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-3 control-label"></label>
+                    <div class="col-md-8 text-center">
+                        <?= Html::submitButton('<i class="glyphicon glyphicon-pencil"></i> '. Yii::t('app', 'Save Changes'), ['class' => 'btn btn-primary ']) ?>
+
+                        <span></span>
+                        <?=Html::resetButton('Reset',['class'=>'btn btn-default']) ?>
+
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
-    <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('<i class="glyphicon glyphicon-pencil"></i> '. Yii::t('app', 'Update'), ['class' => 'btn btn-success btn-block btn-lg']) ?>
-    </div>
-
-    <?php ActiveForm::end(); ?>
-
 </div>
+</div>
+<?php ActiveForm::end(); ?>
