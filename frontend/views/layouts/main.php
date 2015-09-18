@@ -47,16 +47,18 @@ AppAsset::register($this);
         $menuItems[] =
 
             [
-            'label' => 'ออกจากระบบ(' . Yii::$app->user->identity->username . ')',
+            'label' => 'คุณ ..(' . Yii::$app->user->identity->username . ')',
+
                 'items'=>[
-                    ['label' => 'Profile', 'url' => ['/profile/index']],
-                    ['label' => 'Update Profile', 'url' => ['/profile/update']],
-                    [ 'label'=>'ออกจากระบบ','url' => ['/site/logout'],'linkOptions' => ['data-method' => 'post']]
+                    ['label' => '<span class="fa fa-user"></span> Profile', 'url' => ['/profile/index']],
+                    ['label' => '<i class="fa fa-wrench"></i> Update Profile', 'url' => ['/profile/update']],
+                    [ 'label'=>'<i class="fa fa-sign-out"></i>ออกจากระบบ','url' => ['/site/logout'],'linkOptions' => ['data-method' => 'post']]
                 ]
         ];
     }
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav navbar-right'],
+        'encodeLabels' => false,
         'items' => $menuItems,
     ]);
     NavBar::end();
